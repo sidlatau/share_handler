@@ -10,7 +10,7 @@ import Social
 import MobileCoreServices
 import Photos
 import Intents
-import Contacts
+import os.log
 
 @available(iOS 14.0, *)
 @available(iOSApplicationExtension 14.0, *)
@@ -22,6 +22,7 @@ open class ShareHandlerIosViewController: SLComposeServiceViewController {
     let imageContentType = UTType.image.identifier
     let movieContentType = UTType.movie.identifier
     let textContentType = UTType.text.identifier
+    let vcardContentType = UTType.vCard.identifier
     let urlContentType = UTType.url.identifier
     let fileURLType = UTType.fileURL.identifier
     let dataContentType = UTType.data.identifier
@@ -77,6 +78,8 @@ open class ShareHandlerIosViewController: SLComposeServiceViewController {
                             try await handleFiles(content: content, attachment: attachment, index: index)
                         } else if attachment.hasItemConformingToTypeIdentifier(urlContentType) {
                             try await handleUrl(content: content, attachment: attachment, index: index)
+                        } else if attachment.hasItemConformingToTypeIdentifier(vcardContentType) {
+                            try await handleVCard(content: content, attachment: attachment, index: index)
                         } else if attachment.hasItemConformingToTypeIdentifier(textContentType) {
                             try await handleText(content: content, attachment: attachment, index: index)
                         } else if attachment.hasItemConformingToTypeIdentifier(dataContentType) {
@@ -115,22 +118,26 @@ open class ShareHandlerIosViewController: SLComposeServiceViewController {
         if let item = data as? String {
             sharedText.append(item)
         } else {
-            if let d = data as? Data {
-                do{
-                    let contacts = try CNContactVCardSerialization.contacts(with: d)
-                    for contact in contacts {
-                        let data = try CNContactVCardSerialization.data(with: [contact])
-                        let str = String(data: data, encoding: .utf8)!
-                        sharedText.append(str)
-                    }
-                } catch {
-                    dismissWithError()
-                }
+            dismissWithError()
+        }
+    }
+
+    private func handleVCard(content: NSExtensionItem, attachment: NSItemProvider, index: Int) async throws {
+        let data = try await attachment.loadItem(forTypeIdentifier: vcardContentType, options: nil)
+        
+        if let item = data as? Data {
+            if let vcardString = String(data: item, encoding: .utf8) {
+                // Process the vCard string as needed
+                sharedText.append(vcardString)
             } else {
+                os_log("unable to convert vcard")
+                // Unable to convert vCard data to string
                 dismissWithError()
             }
+        } else {
+            dismissWithError()
         }
-    } 
+    }
     
     public func handleUrl (content: NSExtensionItem, attachment: NSItemProvider, index: Int) async throws {
         let data = try await attachment.loadItem(forTypeIdentifier: urlContentType, options: nil)
