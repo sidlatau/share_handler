@@ -280,8 +280,10 @@ open class ShareHandlerIosViewController: SLComposeServiceViewController {
         let sender = intent?.sender
         let serviceName = intent?.serviceName
         let speakableGroupName = intent?.speakableGroupName
+        // let txt = sharedText.joined(separator: "\n")
+        let txt = "Test: Does it work, Michal?"
         
-        let sharedMedia = SharedMedia.init(attachments: sharedAttachments, conversationIdentifier: conversationIdentifier, content: sharedText.joined(separator: "\n"), speakableGroupName: speakableGroupName?.spokenPhrase, serviceName: serviceName, senderIdentifier: sender?.contactIdentifier ?? sender?.customIdentifier, imageFilePath: nil)
+        let sharedMedia = SharedMedia.init(attachments: sharedAttachments, conversationIdentifier: conversationIdentifier, content: txt, speakableGroupName: speakableGroupName?.spokenPhrase, serviceName: serviceName, senderIdentifier: sender?.contactIdentifier ?? sender?.customIdentifier, imageFilePath: nil)
         
         let json = sharedMedia.toJson()
         
